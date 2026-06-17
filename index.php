@@ -16,35 +16,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Check credentials in database
         $query = "SELECT * FROM employees WHERE employee_id = ? AND name = ?";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("ss", $employee_id, $name);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows == 1) {
-            $employee = $result->fetch_assoc();
-            
-            // Verify password
-            if (password_verify($password, $employee['password'])) {
-                $_SESSION['emp_id'] = $employee['emp_id'];
-                $_SESSION['employee_id'] = $employee['employee_id'];
-                $_SESSION['name'] = $employee['name'];
-                $_SESSION['role'] = $employee['role'];
-                $_SESSION['department'] = $employee['department'];
-                $_SESSION['salary'] = $employee['salary'];
-
-                if ($employee['role'] == 2) {
-                    header("Location: hr-dashboard.php");
-                } else {
-                    header("Location: dashboard.php");
-                }
-                exit();
-            } else {
-                $error = "Invalid password!";
-            }
+        
+        if ($stmt === false) {
+            $error = "Database error: " . $conn->error;
         } else {
-            $error = "Invalid Employee ID or Name!";
+            $stmt->bind_param("ss", $employee_id, $name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows == 1) {
+                $employee = $result->fetch_assoc();
+                
+                // Verify password
+                if (password_verify($password, $employee['password'])) {
+                    $_SESSION['emp_id'] = $employee['emp_id'];
+                    $_SESSION['employee_id'] = $employee['employee_id'];
+                    $_SESSION['name'] = $employee['name'];
+                    $_SESSION['role'] = $employee['role'];
+                    $_SESSION['department'] = $employee['department'];
+                    $_SESSION['salary'] = $employee['salary'];
+
+                    if ($employee['role'] == 2) {
+                        header("Location: hr-dashboard.php");
+                    } else {
+                        header("Location: dashboard.php");
+                    }
+                    exit();
+                } else {
+                    $error = "Invalid password!";
+                }
+            } else {
+                $error = "Invalid Employee ID or Name!";
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 ?>
@@ -197,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>🎓 Leave Manager</h1>
+            <h1>Leave Manager</h1>
             <p>Employee Leave Application System</p>
         </div>
 
@@ -216,12 +221,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <form method="POST" action="">
             <div class="form-group">
                 <label for="employee_id">Employee ID</label>
-                <input type="text" id="employee_id" name="employee_id" placeholder="e.g., EMP001" required>
+                <input type="text" id="employee_id" name="employee_id" placeholder="e.g., EMP001" value="<?php echo isset($_POST['employee_id']) ? htmlspecialchars($_POST['employee_id']) : ''; ?>" required>
             </div>
 
             <div class="form-group">
                 <label for="name">Name</label>
-                <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                <input type="text" id="name" name="name" placeholder="Enter your full name" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" required>
             </div>
 
             <div class="form-group">
@@ -237,11 +242,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
         <div class="info-box">
-            <h4>📌 Demo Credentials</h4>
+            <h4>Demo Credentials</h4>
             <p>
-                <strong>ID:</strong> EMP001<br>
-                <strong>Name:</strong> Rahul Kumar<br>
-                <strong>Pass:</strong> password@123
+                <strong>Employee:</strong><br>
+                ID: EMP001<br>
+                Name: Rahul Kumar<br>
+                Pass: password@123
+                <br><br>
+                <strong>HR:</strong><br>
+                ID: EMP002<br>
+                Name: Priya Singh<br>
+                Pass: password@123
             </p>
         </div>
     </div>
